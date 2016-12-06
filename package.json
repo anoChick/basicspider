@@ -1,0 +1,16 @@
+{
+  "name": "basicspider",
+  "version": "1.0.0",
+  "description": "",
+  "main": "handler.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "joi": "^10.0.5",
+    "serverless-dynamodb-local": "^0.2.17",
+    "vogels": "^2.2.0"
+  }
+}

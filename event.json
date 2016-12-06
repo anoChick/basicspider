@@ -1,0 +1,41 @@
+{ "Records":
+  [
+    {
+      "eventID": "aceec60a7614740489f287da7cbe41c1",
+      "eventName": "INSERT",
+      "eventVersion": "1.1",
+      "eventSource": "aws:dynamodb",
+      "awsRegion": "ap-northeast-1",
+      "dynamodb":
+        {
+          "ApproximateCreationDateTime": 1480522020,
+          "Keys":
+            {
+              "ProjectName":
+                {
+                  "S": "1"
+                }
+            },
+          "NewImage":
+            {
+              "ProjectName":
+                {
+                  "S": "1"
+                },
+              "URL":
+                {
+                  "S": "3"
+                },
+              "Selector":
+                {
+                  "S": "2"
+                }
+            },
+          "SequenceNumber": "14000000000005156062739",
+          "SizeBytes": 37,
+          "StreamViewType": "NEW_IMAGE"
+        },
+       "eventSourceARN": "###"
+    }
+  ]
+}

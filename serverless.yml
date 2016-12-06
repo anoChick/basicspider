@@ -1,0 +1,16 @@
+
+service: basicspider # NOTE: update this with your service name
+
+provider:
+  name: aws
+  runtime: nodejs4.3
+  region: ap-northeast-1
+
+functions:
+  spide:
+    handler: handler.spide
+    events:
+      - stream:
+          arn: ####
+          batchSize: 1
+          startingPosition: LATEST

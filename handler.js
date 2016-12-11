@@ -1,56 +1,71 @@
 'use strict';
-
+var client = require('cheerio-httpcli');
 var vogels = require('vogels'),
-    Joi    = require('joi');
-var Spider = vogels.define('Spider', {
-  hashKey : 'URL',
-  timestamps : true,
-  schema : {
-    ProjectName : Joi.string(),
-    Selector : Joi.string(),
-    URL : Joi.string()
+  Joi = require('joi');
+vogels.AWS.config.update({
+  region: 'ap-northeast-1'
+});
+var BasicSpider = vogels.define('BasicSpider', {
+  hashKey: 'target_url',
+  timestamps: true,
+  schema: {
+    target_url: Joi.string(),
+    root_url: Joi.string(),
+    selector: Joi.string(),
+    result: Joi.string(),
   },
-  tableName: 'Spider'
+  tableName: 'BasicSpider'
 });
 
 
+module.exports.spide = (event, context) => {
 
-module.exports.spide = (event, context, callback) => {
-  var randnum = Math.floor( Math.random() * 30 );
-  if(randnum == 10){
-    const response = {
-      statusCode: 200,
-      body: JSON.stringify({
-        message: '終わり',
-        input: event,
-      }),
-    };
-    callback(null, response);
+  console.log('実行');
+  if (event.Records[0].eventName != 'INSERT') return;
+
+  var newImage = event.Records[0].dynamodb.NewImage;
+  if (!newImage.target_url || !newImage.selector || !newImage.root_url ||
+    newImage.result)
     return;
-  }
+  var url = newImage.target_url['S'];
+  var selector = newImage.selector['S'];
+  var rootURL = newImage.root_url['S'];
+  console.log('検索:' + url);
+  console.log(newImage.result);
+  client.fetch(url, {}, function(err, $, res) {
+    BasicSpider
+      .scan()
+      .select('COUNT')
+      .exec(function(err, acc) {
+        if (acc.Count > 1000) return; //1000件を越えたらページ捜査を止める。
+        $('a').each(function(i, e) {
+          var link = ($(e).attr('href') || '').replace('rootURL',
+            '');
+          if (link[0] == '/') {
+            var target_url = rootURL + link;
+            BasicSpider
+              .query(
+                target_url)
+              .exec(function(err, acc) {
 
-  Spider.create({
-    ProjectName : 'ne',
-    Selector : 'ko' ,
-    URL : 'mi'+randnum
-  }, function (err, spider) {
-  if (err)  {
-    return context.fail(err);
-  }
+                if (acc.Count) return;
 
-  const response = {
-    statusCode: 200,
-    body: JSON.stringify({
-      message: 'Go Serverless v1.0! Your function executed successfully!',
-      input: event,
-    }),
-  };
+                BasicSpider.create({
+                  target_url: target_url,
+                  root_url: rootURL,
+                  selector: selector
+                }, function(err, post) {
+                  console.log("create:" + target_url);
+                });
+              });
+          }
+        });
+      });
 
-  callback(null, response);
-  return context.succeed(spider.get());
-});
-
-
-  // Use this code if you don't use the http event with the LAMBDA-PROXY integration
-  // callback(null, { message: 'Go Serverless v1.0! Your function executed successfully!', event });
+    console.log('結果:' + $(selector).text());
+    BasicSpider.update({
+      target_url: url,
+      result: $(selector).text()
+    }, function(err, acc) {});
+  });
 };
